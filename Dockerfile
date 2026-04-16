@@ -16,4 +16,4 @@ RUN chmod -R 775 storage bootstrap/cache
 
 EXPOSE 8080
 
-CMD ["php", "-S", "0.0.0.0:8080", "-t", "public"]
+CMD ["sh", "-c", "php -S 0.0.0.0:8080 -t public || tail -f /dev/null"]
