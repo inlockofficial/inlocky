@@ -13,7 +13,13 @@ return new class extends Migration
     {
         Schema::create('chargily_payments', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger("user_id");
+            
+            // Sets up user relation cleanly from the start
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            
+            // Sets up order relation cleanly from the start
+            $table->foreignId('order_id')->nullable()->constrained('orders')->onDelete('cascade');
+            
             $table->enum("status", ["pending", "paid", "failed"])->default("pending");
             $table->string("currency");
             $table->string("amount");
