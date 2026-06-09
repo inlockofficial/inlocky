@@ -25,16 +25,9 @@
 
     <label>Title *</label>
     <input type="text" name="title" value="{{ $request->title }}" required>
-<!--
+
     <label>Product Image *</label>
     <input type="file" name="image" accept="image/*" required>
--->
-    @if($product->image)
-    <div style="margin-bottom: 15px;">
-        <p>Current Product Image:</p>
-        <img src="{{ asset('storage/' . $product->image) }}" alt="Product Image" style="max-width: 150px; border-radius: 8px;">
-    </div>
-@endif
 
 <label>Upload New Product Image</label>
 <input type="file" name="image" accept="image/*">
