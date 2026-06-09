@@ -44,7 +44,7 @@
             
             <div class="md:col-span-5 space-y-6">
                 <div class="rounded-2xl overflow-hidden border border-[#242833] bg-[#0f1115] shadow-inner">
-                    <img src="{{ asset('storage/'.$product->image) }}" 
+                    <img src="{{ str_starts_with($product->image, 'http') ? $product->image : asset('storage/'.$product->image) }}" 
                          alt="{{ $product->title }}" 
                          class="w-full h-auto object-contain aspect-square hover:scale-105 transition duration-500" 
                          loading="lazy">
