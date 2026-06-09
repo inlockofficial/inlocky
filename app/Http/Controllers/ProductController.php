@@ -54,19 +54,20 @@ class ProductController extends Controller
         //dd("ADMIN UPDATE HIT");
         $product = Product::findOrFail($id);
         //dd($product);
+        /*
         $imageUrl = $request->image;
 
-        /*
+        
         | Fix AliExpress AVIF images
         | Keep only real JPG part
-        */
+        
         if (str_contains($imageUrl, '.jpg')) {
             $imageUrl = substr($imageUrl, 0, strpos($imageUrl, '.jpg') + 4);
         }
-        
+        */
         $request->validate([
             'title' => 'required|string|max:255',
-            'image' => 'required|file|mimes:jpg,jpeg,png,webp,avif|max:2048',
+            'image' => 'nullable|file|mimes:jpg,jpeg,png,webp,avif|max:2048',
             'price_usd' => 'required|numeric|min:0',
             'shipping_usd' => 'nullable|numeric|min:0',
             'service_margin' => 'nullable|numeric|min:0',
@@ -78,17 +79,31 @@ class ProductController extends Controller
             $rawPrice += $request->service_margin; // make it in %
         }
         $finalDzd = ceil($rawPrice / 100) * 100;
-
+/*
         $imagePath = null;
 
         if ($request->hasFile('image')) {
             $imagePath = $request->file('image')
                 ->store('products', 'public');
         }         
+*/
 
+        // 3. Cloudinary Upload Flow
+        if ($request->hasFile('image')) {
+            // Upload file to 'products' folder on Cloudinary and grab the absolute HTTPS link
+            $uploadedFileUrl = $request->file('image')
+                ->storeOnCloudinary('products')
+                ->getSecurePath();
+                
+            // Assign the new Cloudinary link to our product model instance
+            $product->image = $uploadedFileUrl;
+        }
+        // If no new image was uploaded, $product->image naturally retains its original DB link!
+
+        // 4. Update Database Table Rows
         $product->update([
             'title' => $request->title,
-            'image' => $imagePath,
+            'image' => $product->image, // Use the updated image URL
             'price_usd' => $request->price_usd,
             'shipping_usd' => $request->shipping_usd ?? 0,
             'final_price_dzd' => $finalDzd,
