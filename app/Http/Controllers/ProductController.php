@@ -51,9 +51,9 @@ class ProductController extends Controller
     }
 
     public function adminUpdate(Request $request, $id) {
-        dd("ADMIN UPDATE HIT");
+        //dd("ADMIN UPDATE HIT");
         $product = Product::findOrFail($id);
-        //dd($product);
+        dd($product);
         /*
         $imageUrl = $request->image;
 
