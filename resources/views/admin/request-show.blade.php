@@ -28,9 +28,6 @@
 
     <label>Product Image *</label>
     <input type="file" name="image" accept="image/*" required>
-
-<label>Upload New Product Image</label>
-<input type="file" name="image" accept="image/*">
     
     <label>Price USD *</label>
     <input type="number" step="0.01" name="price_usd" value="{{ $request->price_usd }}" required>
