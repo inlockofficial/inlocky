@@ -124,3 +124,12 @@ Route::post(
 Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel'])
     ->name('orders.cancel')
     ->middleware('auth');
+
+Route::get('/debug-env-check', function () {
+    return response()->json([
+        'cloudinary_file_exists' => file_exists(config_path('cloudinary.php')),
+        'config_cached'          => app()->configurationIsCached(),
+        'loaded_config_data'     => config('cloudinary'),
+        'cloudinary_url_env'     => env('CLOUDINARY_URL') ? 'Detected' : 'Missing',
+    ]);
+});
