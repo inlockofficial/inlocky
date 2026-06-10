@@ -133,7 +133,7 @@ class ProductController extends Controller
             // Upload file to 'products' folder on Cloudinary and grab the absolute HTTPS link
             /* $uploadedFileUrl = $request->file('image')
                 ->storeOnCloudinary('products')
-                ->getSecurePath(); */
+                ->getSecurePath(); 
             // replacement:
             $uploadedFileUrl = Cloudinary::upload(
                 $request->file('image')->getRealPath(), 
