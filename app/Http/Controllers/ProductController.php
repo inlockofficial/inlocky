@@ -72,7 +72,7 @@ class ProductController extends Controller
             'shipping_usd' => 'nullable|numeric|min:0',
             'service_margin' => 'nullable|numeric|min:0',
         ]);
-        dd("1. Validation Passed!"); //TEST CHECKPOINT 1
+        //dd("1. Validation Passed!"); //TEST CHECKPOINT 1
 
         $rate = config('app.usd_to_dzd');
         $rawPrice = ($request->price_usd + $request->shipping_usd) * $rate;
@@ -95,7 +95,7 @@ class ProductController extends Controller
             $uploadedFileUrl = $request->file('image')
                 ->storeOnCloudinary('products')
                 ->getSecurePath();
-                
+          dd("2. Cloudinary Uploaded!", $uploadedFileUrl); //TEST CHECKPOINT 2      
             // Assign the new Cloudinary link to our product model instance
             $product->image = $uploadedFileUrl;
         }
