@@ -114,8 +114,18 @@ class ProductController extends Controller
             'LINE_NUMBER' => $e->getLine()
         ]);
     }
-      */  
-        
+      */ 
+    // 3. Upload image to Cloudinary if provided (by perplexity)
+    if ($request->hasFile('image')) {
+        $uploadedFile = Cloudinary::upload(
+            $request->file('image')->getRealPath()
+        )
+        ->folder('inlock/products') // Optional: override prefix
+        ->getSecurePath(); // Returns HTTPS URL
+
+        $product->image_url = $uploadedFile;
+    }
+        /*
         // 3. Cloudinary Upload Flow
         if ($request->hasFile('image')) {
             //dd("2. Cloudinary pre upload!"); //TEST CHECKPOINT 2     
@@ -133,7 +143,7 @@ class ProductController extends Controller
             $product->image = $uploadedFileUrl;
         }
         // If no new image was uploaded, $product->image naturally retains its original DB link!
-
+*/
         // 4. Update Database Table Rows
         $product->update([
             'title' => $request->title,
