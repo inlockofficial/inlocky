@@ -7,6 +7,8 @@ use App\Models\Product;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+
 class ProductController extends Controller
 {
     public function store(Request $request)
@@ -116,11 +118,16 @@ class ProductController extends Controller
         
         // 3. Cloudinary Upload Flow
         if ($request->hasFile('image')) {
-            dd("2. Cloudinary pre upload!"); //TEST CHECKPOINT 2     
+            //dd("2. Cloudinary pre upload!"); //TEST CHECKPOINT 2     
             // Upload file to 'products' folder on Cloudinary and grab the absolute HTTPS link
-            $uploadedFileUrl = $request->file('image')
+            /* $uploadedFileUrl = $request->file('image')
                 ->storeOnCloudinary('products')
-                ->getSecurePath();
+                ->getSecurePath(); */
+            // replacement:
+            $uploadedFileUrl = Cloudinary::upload(
+                $request->file('image')->getRealPath(), 
+                ['folder' => 'products']
+            )->getSecurePath();
           dd("2. Cloudinary Uploaded!", $uploadedFileUrl); //TEST CHECKPOINT 2      
             // Assign the new Cloudinary link to our product model instance
             $product->image = $uploadedFileUrl;
