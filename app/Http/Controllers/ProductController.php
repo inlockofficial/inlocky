@@ -116,6 +116,7 @@ class ProductController extends Controller
     }
       */ 
     // 3. Upload image to Cloudinary if provided (by perplexity)
+    $uploadedFile = null; // Define outside
     if ($request->hasFile('image')) {
         $uploadedFile = Cloudinary::upload(
             $request->file('image')->getRealPath()
@@ -123,7 +124,7 @@ class ProductController extends Controller
         ->folder('inlock/products') // Optional: override prefix
         ->getSecurePath(); // Returns HTTPS URL
 
-        $product->image_url = $uploadedFile;
+        $product->image = $uploadedFile;
     }
         /*
         // 3. Cloudinary Upload Flow
@@ -147,7 +148,7 @@ class ProductController extends Controller
         // 4. Update Database Table Rows
         $product->update([
             'title' => $request->title,
-            'image' => $product->image, // Use the updated image URL
+            'image' => $uploadedFile ?? $product->image, // Use the updated image URL
             'price_usd' => $request->price_usd,
             'shipping_usd' => $request->shipping_usd ?? 0,
             'final_price_dzd' => $finalDzd,
