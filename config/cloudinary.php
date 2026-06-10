@@ -11,4 +11,28 @@ return [
     'api_secret' => env('CLOUDINARY_API_SECRET'),
     'notification_url' => env('CLOUDINARY_NOTIFICATION_URL'),
     'upload_preset' => env('CLOUDINARY_UPLOAD_PRESET'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Upload Route Configuration
+    |--------------------------------------------------------------------------
+    | The package service provider expects this to be an array layout to 
+    | map internal endpoints safely without throwing array offset errors.
+    */
+    'upload_route' => [
+        'prefix' => 'api',
+        'middleware' => [],
+        'controller' => \CloudinaryLabs\CloudinaryLaravel\Http\Controllers\CloudinaryController::class,
+        'action' => 'upload',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Upload Action Configuration
+    |--------------------------------------------------------------------------
+    */
+    'upload_action' => [
+        'interceptor' => [],
+    ],
 ];
+
