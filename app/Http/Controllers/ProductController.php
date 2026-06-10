@@ -101,7 +101,7 @@ class ProductController extends Controller
         // Try uploading using absolute namespacing
         $uploadedFileUrl = \CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary::upload(
             $request->file('image')->getRealPath(), 
-            ['folder' => 'inlock/products']
+            ['folder' => 'inlock_product_images']
         )->getSecurePath();
 
         dd("Success! Cloudinary URL created: " . $uploadedFileUrl);
