@@ -74,7 +74,7 @@ class ProductController extends Controller
             'shipping_usd' => 'nullable|numeric|min:0',
             'service_margin' => 'nullable|numeric|min:0',
         ]);
-        //dd("1. Validation Passed!"); //TEST CHECKPOINT 1
+        dd("1. Validation Passed!"); //TEST CHECKPOINT 1
 
         $rate = config('app.usd_to_dzd');
         $rawPrice = ($request->price_usd + $request->shipping_usd) * $rate;
