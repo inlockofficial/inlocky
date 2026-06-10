@@ -124,7 +124,7 @@ Route::post(
 Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel'])
     ->name('orders.cancel')
     ->middleware('auth');
-
+/*
 Route::get('/debug-env-check', function () {
     return response()->json([
         'cloudinary_file_exists' => file_exists(config_path('cloudinary.php')),
@@ -132,4 +132,25 @@ Route::get('/debug-env-check', function () {
         'loaded_config_data'     => config('cloudinary'),
         'cloudinary_url_env'     => env('CLOUDINARY_URL') ? 'Detected' : 'Missing',
     ]);
+});
+*/
+
+Route::get('/debug-vendor-file', function () {
+    $path = base_path('vendor/cloudinary-labs/cloudinary-laravel/src/CloudinaryServiceProvider.php');
+    
+    if (!file_exists($path)) {
+        return response()->json(['error' => 'File not found at ' . $path]);
+    }
+
+    $lines = file($path);
+    $output = [];
+    
+    // Grab lines 55 to 75 (0-indexed array means index 63 is line 64)
+    for ($i = 54; $i <= 74; $i++) {
+        if (isset($lines[$i])) {
+            $output[$i + 1] = trim($lines[$i]);
+        }
+    }
+
+    return response()->json($output);
 });
