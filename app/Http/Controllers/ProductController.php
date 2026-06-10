@@ -92,7 +92,7 @@ class ProductController extends Controller
                 ->store('products', 'public');
         }         
 */
-/*
+
         // Safety check: Ensure Laravel actually sees the file payload
         if (!$request->hasFile('image')) {
             dd("Diagnostic Stop: The request reached the controller, but Laravel says no file was uploaded.");
@@ -101,7 +101,7 @@ class ProductController extends Controller
         // Try uploading using absolute namespacing
         $uploadedFileUrl = \CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary::upload(
             $request->file('image')->getRealPath(), 
-            ['folder' => 'products']
+            ['folder' => 'inlock/products']
         )->getSecurePath();
 
         dd("Success! Cloudinary URL created: " . $uploadedFileUrl);
@@ -114,7 +114,7 @@ class ProductController extends Controller
             'LINE_NUMBER' => $e->getLine()
         ]);
     }
-      */ 
+      /*
     // 3. Upload image to Cloudinary if provided (by perplexity)
     $uploadedFile = null; // Define outside
     if ($request->hasFile('image')) {
@@ -126,6 +126,7 @@ class ProductController extends Controller
 dd("2. Cloudinary Uploaded!", $uploadedFile);
         $product->image = $uploadedFile;
     }
+    */
         /*
         // 3. Cloudinary Upload Flow
         if ($request->hasFile('image')) {
