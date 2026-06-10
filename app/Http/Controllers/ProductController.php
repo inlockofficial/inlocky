@@ -51,6 +51,7 @@ class ProductController extends Controller
     }
 
     public function adminUpdate(Request $request, $id) {
+        dd(config('cloudinary'));
         try {
         //dd("ADMIN UPDATE HIT");
         $product = Product::findOrFail($id);
