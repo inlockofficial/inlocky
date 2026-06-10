@@ -51,6 +51,7 @@ class ProductController extends Controller
     }
 
     public function adminUpdate(Request $request, $id) {
+        try {
         //dd("ADMIN UPDATE HIT");
         $product = Product::findOrFail($id);
         //dd($product);
@@ -89,6 +90,29 @@ class ProductController extends Controller
         }         
 */
 
+        // Safety check: Ensure Laravel actually sees the file payload
+        if (!$request->hasFile('image')) {
+            dd("Diagnostic Stop: The request reached the controller, but Laravel says no file was uploaded.");
+        }
+            
+        // Try uploading using absolute namespacing
+        $uploadedFileUrl = \CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary::upload(
+            $request->file('image')->getRealPath(), 
+            ['folder' => 'products']
+        )->getSecurePath();
+
+        dd("Success! Cloudinary URL created: " . $uploadedFileUrl);
+
+    } catch (\Exception $e) {
+        // If anything fails above, catch the error and blast it to the screen
+        dd([
+            'CRASH_MESSAGE' => $e->getMessage(),
+            'CHOKED_ON_FILE' => $e->getFile(),
+            'LINE_NUMBER' => $e->getLine()
+        ]);
+    }
+        
+        /*
         // 3. Cloudinary Upload Flow
         if ($request->hasFile('image')) {
             // Upload file to 'products' folder on Cloudinary and grab the absolute HTTPS link
@@ -100,7 +124,7 @@ class ProductController extends Controller
             $product->image = $uploadedFileUrl;
         }
         // If no new image was uploaded, $product->image naturally retains its original DB link!
-
+*/
         // 4. Update Database Table Rows
         $product->update([
             'title' => $request->title,
