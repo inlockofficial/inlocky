@@ -16,7 +16,7 @@ class OrderController extends Controller
         ]);
 
         $product = Product::findOrFail($request->product_id);
-        echo "Product ID: " . $product->id; // Debug line
+        \Log::info("Creating order for product: " . $product->id); // Debug line
         $order = Order::create([
             'user_id' => Auth::id(),
             'product_id' => $product->id,
