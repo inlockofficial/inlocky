@@ -54,7 +54,7 @@ class ProductController extends Controller
 
     public function adminUpdate(Request $request, $id) {
         //dd(config('cloudinary'));
-        try {
+        //try {
         //dd("ADMIN UPDATE HIT");
         $product = Product::findOrFail($id);
         //dd($product);
@@ -84,14 +84,15 @@ class ProductController extends Controller
             $rawPrice += $request->service_margin; // make it in %
         }
         $finalDzd = ceil($rawPrice / 100) * 100;
-/*
+
         $imagePath = null;
 
         if ($request->hasFile('image')) {
             $imagePath = $request->file('image')
                 ->store('products', 'public');
         }         
-*/
+
+/*
 
         // Safety check: Ensure Laravel actually sees the file payload
         if (!$request->hasFile('image')) {
@@ -114,6 +115,7 @@ class ProductController extends Controller
             'LINE_NUMBER' => $e->getLine()
         ]);
     }
+*/
       /*
     // 3. Upload image to Cloudinary if provided (by perplexity)
     $uploadedFile = null; // Define outside
@@ -149,7 +151,7 @@ dd("2. Cloudinary Uploaded!", $uploadedFile);
         // 4. Update Database Table Rows
         $product->update([
             'title' => $request->title,
-            'image' => $uploadedFile ?? $product->image, // Use the updated image URL
+            'image' => $imagePath
             'price_usd' => $request->price_usd,
             'shipping_usd' => $request->shipping_usd ?? 0,
             'final_price_dzd' => $finalDzd,
