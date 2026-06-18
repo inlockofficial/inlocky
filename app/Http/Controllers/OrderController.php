@@ -11,6 +11,7 @@ class OrderController extends Controller
 {
     public function store(Request $request)
     {
+        try{
          $request->validate([
             'product_id' => 'required|exists:products,id',
         ]);
@@ -25,7 +26,15 @@ class OrderController extends Controller
         ]);
 
         return redirect()->route('orders.payment', $order->id);
-    }
+   } catch (\Exception $e) {
+        // This forces the server to output the exact error message to your browser screen
+        dd([
+            'ERROR_MESSAGE' => $e->getMessage(),
+            'FILE'          => $e->getFile(),
+            'LINE'          => $e->getLine()
+        ]);
+        }
+        }
 
     public function index()
     {
