@@ -10,31 +10,31 @@ use Illuminate\Support\Facades\Auth;
 class OrderController extends Controller
 {
     public function store(Request $request)
-    {
-        try{
-         $request->validate([
-            'product_id' => 'required|exists:products,id',
-        ]);
+{
+    $request->validate([
+        'product_id' => 'required|exists:products,id',
+    ]);
 
-        $product = Product::findOrFail($request->product_id);
-        \Log::info("Creating order for product: " . $product->id); // Debug line
-        $order = Order::create([
-            'user_id' => Auth::id(),
-            'product_id' => $product->id,
-            'status' => 'pending_payment',
-            'expires_at' => now()->addHours(24),
-        ]);
+    // 1. Find the priced product details
+    $product = Product::findOrFail($request->product_id);
 
-        return redirect()->route('orders.payment', $order->id);
-   } catch (\Exception $e) {
-        // This forces the server to output the exact error message to your browser screen
-        dd([
-            'ERROR_MESSAGE' => $e->getMessage(),
-            'FILE'          => $e->getFile(),
-            'LINE'          => $e->getLine()
-        ]);
-        }
-        }
+    // 2. Create the order by snapshotting the product's current states
+    $order = Order::create([
+        'user_id'       => Auth::id(),
+        'product_id'    => $product->id,
+        'product_title' => $product->title,
+        'product_image' => $product->image,
+        'price_usd'     => $product->price_usd,
+        'rate_used'     => $product->rate_used,
+        'total_dzd'     => $product->final_price_dzd,
+        'status'        => 'pending_payment',
+        'expires_at'    => now()->addHours(24),
+    ]);
+
+    // 3. Hand off clean data straight to the payment view
+    return redirect()->route('orders.payment', $order->id);
+}
+
 
     public function index()
     {
