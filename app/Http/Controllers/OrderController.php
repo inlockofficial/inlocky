@@ -18,17 +18,20 @@ class OrderController extends Controller
     // 1. Find the priced product details
     $product = Product::findOrFail($request->product_id);
 
-    // 2. Create the order by snapshotting the product's current states
     $order = Order::create([
-        'user_id'       => Auth::id(),
-        'product_id'    => $product->id,
-        'product_title' => $product->title,
-        'product_image' => $product->image,
-        'price_usd'     => $product->price_usd,
-        'rate_used'     => $product->rate_used,
-        'total_dzd'     => $product->final_price_dzd,
-        'status'        => 'pending_payment',
-        'expires_at'    => now()->addHours(24),
+        'user_id'         => Auth::id(),
+        'product_id'      => $product->id,
+        'product_title'   => $product->title,
+        'product_image'   => $product->image, // Captures the image filename/path
+        'selected_size'   => $product->size,   // Pulling from your hardcoded product field
+        'selected_color'  => $product->color,  // Pulling from your hardcoded product field
+        'custom_note'     => $product->custom_note, 
+        'quantity'        => $product->quantity,
+        'price_usd'       => $product->price_usd,
+        'rate_used'       => $product->rate_used,
+        'total_dzd'       => $product->final_price_dzd,
+        'status'          => 'pending_payment',
+        'expires_at'      => now()->addHours(24),
     ]);
 
     // 3. Hand off clean data straight to the payment view
