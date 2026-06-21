@@ -33,10 +33,14 @@ class ChargilyPayController extends Controller
         $product = $order->product;
         $user = $order->user;
 
+        $amount   = (int) round($order->total_dzd);
+        $currency = "dzd";
+
+        /*
         $rate = 250; // your USD → DZD conversion rate
         $amount = round($product->price_usd * $rate);
         $currency = "dzd";
-
+        */
         $payment = \App\Models\ChargilyPayment::create([
             "user_id"  => $user->id,
             "order_id" => $order->id,
@@ -55,7 +59,8 @@ class ChargilyPayController extends Controller
                 "description" => "Payment for {$product->title} (ID={$payment->id})",
                 "success_url" => route("chargilypay.back"),
                 "failure_url" => route("chargilypay.back"),
-                "webhook_endpoint" => "https://4b73-154-255-103-179.ngrok-free.app/chargilypay/webhook",
+                //"webhook_endpoint" => "https://4b73-154-255-103-179.ngrok-free.app/chargilypay/webhook",
+                "webhook_endpoint" => route("chargilypay.webhook_endpoint"),
             ]);
 
             if ($checkout) {
@@ -118,6 +123,9 @@ class ChargilyPayController extends Controller
                             /////
                             ///// Confirm your order
                             /////
+                            if ($payment->order) {
+                               $payment->order->update(['status' => 'payment_review']);
+                            }
                             return response()->json(["status" => true, "message" => "Payment has been completed"]);
                         } else if ($checkout->getStatus() === "failed" or $checkout->getStatus() === "canceled") {
                             //update payment status in database
