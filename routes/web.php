@@ -87,6 +87,8 @@ Route::get('/request/{id}/waiting', function ($id) {
 
 // Admin middleware for security
 Route::middleware(['auth', 'is_admin'])->group(function () {
+    Route::get('/admin', [DashboardController::class, 'index'])->name('admin.dashboard');
+    
     Route::get('/admin/requests', [ProductController::class, 'adminIndex'])->name('admin.requests');
     Route::get('/admin/request/{id}', [ProductController::class, 'adminShow'])->name('admin.request.show');
     Route::post('/admin/request/{id}/update', [ProductController::class, 'adminUpdate'])->name('admin.request.update');
