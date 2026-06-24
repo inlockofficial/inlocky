@@ -93,6 +93,8 @@ Route::middleware(['auth', 'is_admin'])->group(function () {
     Route::get('/admin/requests', [ProductController::class, 'adminIndex'])->name('admin.requests');
     Route::get('/admin/request/{id}', [ProductController::class, 'adminShow'])->name('admin.request.show');
     Route::post('/admin/request/{id}/update', [ProductController::class, 'adminUpdate'])->name('admin.request.update');
+
+    Route::post('/admin/request/{id}/reject', [ProductController::class, 'adminReject'])->name('admin.request.reject');
 });
 
 Route::get('/request/{id}/status', function($id) {
