@@ -6,7 +6,6 @@ use Illuminate\Http\Request;
 use App\Models\Product;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 class ProductController extends Controller
@@ -42,124 +41,112 @@ class ProductController extends Controller
         return redirect()->route('request.waiting', $product->id);
     }
 
-    public function adminIndex() {
-        $requests = Product::orderBy('created_at', 'desc')->get();
-        return view('admin.requests', compact('requests'));
+    public function adminIndex(Request $request)
+    {
+        $tab = $request->query('tab', 'pending');
+
+        $counts = [
+            'pending' => Product::where('status', 'pending_review')->count(),
+            'expired' => Product::where('status', 'priced')
+                ->whereNotNull('quote_expires_at')
+                ->where('quote_expires_at', '<', now())
+                ->count(),
+            'rejected' => Product::where('status', 'rejected')->count(),
+        ];
+
+        $requests = match ($tab) {
+            'expired' => Product::where('status', 'priced')
+                ->whereNotNull('quote_expires_at')
+                ->where('quote_expires_at', '<', now())
+                ->latest()
+                ->get(),
+
+            'rejected' => Product::where('status', 'rejected')
+                ->latest()
+                ->get(),
+
+            default => Product::where('status', 'pending_review')
+                ->latest()
+                ->get(),
+        };
+
+        return view('admin.requests', compact('requests', 'counts', 'tab'));
     }
 
-    public function adminShow($id) {
+    public function adminShow($id)
+    {
         $request = Product::findOrFail($id);
+
         return view('admin.request-show', compact('request'));
     }
 
-    public function adminUpdate(Request $request, $id) {
-        //dd(config('cloudinary'));
-        //try {
-        //dd("ADMIN UPDATE HIT");
+    public function adminUpdate(Request $request, $id)
+    {
         $product = Product::findOrFail($id);
-        //dd($product);
-        /*
-        $imageUrl = $request->image;
 
-        
-        | Fix AliExpress AVIF images
-        | Keep only real JPG part
-        
-        if (str_contains($imageUrl, '.jpg')) {
-            $imageUrl = substr($imageUrl, 0, strpos($imageUrl, '.jpg') + 4);
-        }
-        */
         $request->validate([
             'title' => 'required|string|max:255',
-            'image' => 'nullable|file|mimes:jpg,jpeg,png,webp,avif|max:2048',
+            'image' => ($product->image ? 'nullable' : 'required') . '|file|mimes:jpg,jpeg,png,webp,avif|max:2048',
             'price_usd' => 'required|numeric|min:0',
             'shipping_usd' => 'nullable|numeric|min:0',
-            'service_margin' => 'nullable|numeric|min:0',
+            'service_fee_dzd' => 'nullable|numeric|min:0',
+            'quote_expires_at' => 'nullable|date',
         ]);
-        //dd("1. Validation Passed!"); //TEST CHECKPOINT 1
 
         $rate = config('app.usd_to_dzd');
-        $rawPrice = ($request->price_usd + $request->shipping_usd) * $rate;
-        if ($request->service_margin) {
-            $rawPrice += $request->service_margin; // make it in %
-        }
+
+        $priceUsd = (float) $request->price_usd;
+        $shippingUsd = (float) ($request->shipping_usd ?? 0);
+        $serviceFeeDzd = (float) ($request->service_fee_dzd ?? 0);
+
+        $rawPrice = ($priceUsd + $shippingUsd) * $rate;
+        $rawPrice += $serviceFeeDzd;
+
         $finalDzd = ceil($rawPrice / 100) * 100;
 
-        $imagePath = null;
+        $imagePath = $product->image;
 
         if ($request->hasFile('image')) {
             $imagePath = $request->file('image')
                 ->store('products', 'public');
-        }         
-
-/*
-
-        // Safety check: Ensure Laravel actually sees the file payload
-        if (!$request->hasFile('image')) {
-            dd("Diagnostic Stop: The request reached the controller, but Laravel says no file was uploaded.");
         }
-            
-        // Try uploading using absolute namespacing
-        $uploadedFileUrl = \CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary::upload(
-            $request->file('image')->getRealPath(), 
-            ['folder' => 'inlock_product_images']
-        )->getSecurePath();
 
-        dd("Success! Cloudinary URL created: " . $uploadedFileUrl);
-
-    } catch (\Exception $e) {
-        // If anything fails above, catch the error and blast it to the screen
-        dd([
-            'CRASH_MESSAGE' => $e->getMessage(),
-            'CHOKED_ON_FILE' => $e->getFile(),
-            'LINE_NUMBER' => $e->getLine()
-        ]);
-    }
-*/
-      /*
-    // 3. Upload image to Cloudinary if provided (by perplexity)
-    $uploadedFile = null; // Define outside
-    if ($request->hasFile('image')) {
-        $uploadedFile = Cloudinary::upload(
-            $request->file('image')->getRealPath()
-        )
-        ->folder('inlock/products') // Optional: override prefix
-        ->getSecurePath(); // Returns HTTPS URL
-dd("2. Cloudinary Uploaded!", $uploadedFile);
-        $product->image = $uploadedFile;
-    }
-    */
-        /*
-        // 3. Cloudinary Upload Flow
-        if ($request->hasFile('image')) {
-            //dd("2. Cloudinary pre upload!"); //TEST CHECKPOINT 2     
-            // Upload file to 'products' folder on Cloudinary and grab the absolute HTTPS link
-            /* $uploadedFileUrl = $request->file('image')
-                ->storeOnCloudinary('products')
-                ->getSecurePath(); 
-            // replacement:
-            $uploadedFileUrl = Cloudinary::upload(
-                $request->file('image')->getRealPath(), 
-                ['folder' => 'products']
-            )->getSecurePath();
-          dd("2. Cloudinary Uploaded!", $uploadedFileUrl); //TEST CHECKPOINT 2      
-            // Assign the new Cloudinary link to our product model instance
-            $product->image = $uploadedFileUrl;
-        }
-        // If no new image was uploaded, $product->image naturally retains its original DB link!
-*/
-        // 4. Update Database Table Rows
         $product->update([
             'title' => $request->title,
             'image' => $imagePath,
-            'price_usd' => $request->price_usd,
-            'shipping_usd' => $request->shipping_usd ?? 0,
+            'price_usd' => $priceUsd,
+            'shipping_usd' => $shippingUsd,
+            'service_fee_dzd' => $serviceFeeDzd,
             'final_price_dzd' => $finalDzd,
             'rate_used' => $rate,
+            'quote_expires_at' => $request->quote_expires_at,
+            'rejection_reason' => null,
+            'rejected_at' => null,
             'status' => 'priced',
         ]);
-        //dd($request->all());
 
-        return redirect()->route('admin.requests')->with('success', 'Product updated!');
+        return redirect()
+            ->route('admin.requests')
+            ->with('success', 'Product updated!');
+    }
+
+    public function adminReject(Request $request, $id)
+    {
+        $product = Product::findOrFail($id);
+
+        $validated = $request->validate([
+            'rejection_reason' => 'nullable|string|max:2000',
+        ]);
+
+        $product->update([
+            'status' => 'rejected',
+            'rejection_reason' => $validated['rejection_reason'] ?? null,
+            'rejected_at' => now(),
+            'quote_expires_at' => null,
+        ]);
+
+        return redirect()
+            ->route('admin.requests', ['tab' => 'rejected'])
+            ->with('success', 'Request rejected.');
     }
 }
