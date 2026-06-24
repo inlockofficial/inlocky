@@ -3,16 +3,17 @@
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LinkController;
-use App\Http\Controllers\Admin\DashboardController;
 
 Route::get('/', function () {
     return view('welcome');
 })->name('welcome');
+
 /*
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 */
+
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -22,11 +23,13 @@ Route::middleware('auth')->group(function () {
 //Route::post('/test', [LinkController::class, 'test'])->name('product.unlock');
 //Route::post('/test', [LinkController::class, 'handleSearch'])->name('product.unlock'); // OG
 //Route::post('/process-link', [LinkController::class, 'test']);
+
 /*
 Route::get('/test', function () {
     return view('product-result');
 })->name('product.unlock');
 */
+
 Route::get('/mock/products', function () {
     return response()->json([
         'products' => [
@@ -54,7 +57,7 @@ Route::post('/orders', [OrderController::class, 'store'])
     ->middleware('auth')
     ->name('orders.store');
 
-Route::get('/orders/{order}/payment', 
+Route::get('/orders/{order}/payment',
     [OrderController::class, 'payment'])
     ->middleware('auth')
     ->name('orders.payment');
@@ -66,9 +69,11 @@ Route::get('chargilypay/back', [ChargilyPayController::class, "back"])->name("ch
 Route::post('chargilypay/webhook', [ChargilyPayController::class, "webhook"])->name("chargilypay.webhook_endpoint");
 
 use App\Http\Controllers\ProductController;
+
 /*
 Route::get('/product/unlocked', [ProductController::class, 'showFirstProduct'])->name('product.unlock');
 */
+
 use App\Http\Controllers\ExtractorController;
 
 Route::post('/fetch-product', [ExtractorController::class, 'fetch'])->name('fetch.product');
@@ -79,36 +84,74 @@ Route::post('/request', [ProductController::class, 'store'])
 
 Route::get('/request/{id}/waiting', function ($id) {
     $request = \App\Models\Product::findOrFail($id);
-    if($request->user_id !== auth()->id()){
+
+    if ($request->user_id !== auth()->id()) {
         abort(403);
     }
+
     return view('waiting', compact('request'));
 })->middleware('auth')
-->name('request.waiting');
+    ->name('request.waiting');
+
+use App\Http\Controllers\Admin\DashboardController;
 
 // Admin middleware for security
 Route::middleware(['auth', 'is_admin'])->group(function () {
     Route::get('/admin', [DashboardController::class, 'index'])->name('admin.dashboard');
-    
+
     Route::get('/admin/requests', [ProductController::class, 'adminIndex'])->name('admin.requests');
     Route::get('/admin/request/{id}', [ProductController::class, 'adminShow'])->name('admin.request.show');
     Route::post('/admin/request/{id}/update', [ProductController::class, 'adminUpdate'])->name('admin.request.update');
-
     Route::post('/admin/request/{id}/reject', [ProductController::class, 'adminReject'])->name('admin.request.reject');
 });
 
-Route::get('/request/{id}/status', function($id) {
+Route::get('/request/{id}/status', function ($id) {
     $request = \App\Models\Product::findOrFail($id);
-    return response()->json(['status' => $request->status]);
-});
+
+    if ($request->user_id !== auth()->id()) {
+        abort(403);
+    }
+
+    return response()->json([
+        'status' => $request->status,
+        'redirect_url' => match ($request->status) {
+            'priced' => route('request.view', $request->id),
+            'rejected' => route('request.rejected', $request->id),
+            default => null,
+        },
+    ]);
+})->middleware('auth')
+    ->name('request.status');
 
 Route::get('/request/{id}/view', function ($id) {
     $product = \App\Models\Product::findOrFail($id);
+
+    if ($product->user_id !== auth()->id()) {
+        abort(403);
+    }
+
     if ($product->status !== 'priced') {
         return redirect()->route('request.waiting', $id);
     }
+
     return view('request-view', compact('product'));
-});
+})->middleware('auth')
+    ->name('request.view');
+
+Route::get('/request/{id}/rejected', function ($id) {
+    $request = \App\Models\Product::findOrFail($id);
+
+    if ($request->user_id !== auth()->id()) {
+        abort(403);
+    }
+
+    if ($request->status !== 'rejected') {
+        return redirect()->route('request.waiting', $id);
+    }
+
+    return view('request-rejected', compact('request'));
+})->middleware('auth')
+    ->name('request.rejected');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [OrderController::class, 'index'])
@@ -129,6 +172,7 @@ Route::post(
 Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel'])
     ->name('orders.cancel')
     ->middleware('auth');
+
 /*
 Route::get('/debug-env-check', function () {
     return response()->json([
@@ -142,14 +186,14 @@ Route::get('/debug-env-check', function () {
 
 Route::get('/debug-vendor-file', function () {
     $path = base_path('vendor/cloudinary-labs/cloudinary-laravel/src/CloudinaryServiceProvider.php');
-    
+
     if (!file_exists($path)) {
         return response()->json(['error' => 'File not found at ' . $path]);
     }
 
     $lines = file($path);
     $output = [];
-    
+
     // Grab lines 55 to 75 (0-indexed array means index 63 is line 64)
     for ($i = 54; $i <= 74; $i++) {
         if (isset($lines[$i])) {
