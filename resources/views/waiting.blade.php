@@ -68,12 +68,12 @@
             <span id="status"
                 class="px-4 py-2 rounded-full text-sm font-semibold
                 bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">
-                {{ ucfirst($request->status) }}
+                {{ ucfirst(str_replace('_', ' ', $request->status)) }}
             </span>
         </div>
 
         <!-- Info box -->
-        <div class="
+        <div id="status-message" class="
             bg-[#0f1115]
             border border-[#242833]
             rounded-lg
@@ -85,42 +85,64 @@
 
     </div>
 
-
 <script>
     const requestId = {{ $request->id }};
+
+    function updateStatusBadge(statusEl, classes) {
+        statusEl.className = "px-4 py-2 rounded-full text-sm font-semibold border ";
+        statusEl.classList.add(...classes);
+    }
+
+    function formatStatus(status) {
+        return status
+            .replaceAll('_', ' ')
+            .replace(/\b\w/g, character => character.toUpperCase());
+    }
 
     function checkStatus() {
         fetch(`/request/${requestId}/status`)
             .then(res => res.json())
             .then(data => {
-
                 const statusEl = document.getElementById('status');
-                statusEl.innerText =
-                    data.status.charAt(0).toUpperCase() +
-                    data.status.slice(1);
+                const messageEl = document.getElementById('status-message');
 
-                // change badge color dynamically
-                statusEl.className =
-                    "px-4 py-2 rounded-full text-sm font-semibold border ";
+                statusEl.innerText = formatStatus(data.status);
 
                 if (data.status === 'priced') {
-                    statusEl.classList.add(
+                    updateStatusBadge(statusEl, [
                         "bg-green-500/20",
                         "text-green-400",
                         "border-green-500/30"
-                    );
+                    ]);
 
                     setTimeout(() => {
-                        window.location.href =
-                            `/request/${requestId}/view`;
+                        window.location.href = data.redirect_url || `/request/${requestId}/view`;
                     }, 1200);
-                } else {
-                    statusEl.classList.add(
-                        "bg-yellow-500/20",
-                        "text-yellow-400",
-                        "border-yellow-500/30"
-                    );
+
+                    return;
                 }
+
+                if (data.status === 'rejected') {
+                    updateStatusBadge(statusEl, [
+                        "bg-red-500/20",
+                        "text-red-400",
+                        "border-red-500/30"
+                    ]);
+
+                    messageEl.innerText = "Your request was reviewed. Redirecting to the decision details...";
+
+                    setTimeout(() => {
+                        window.location.href = data.redirect_url || `/request/${requestId}/rejected`;
+                    }, 1200);
+
+                    return;
+                }
+
+                updateStatusBadge(statusEl, [
+                    "bg-yellow-500/20",
+                    "text-yellow-400",
+                    "border-yellow-500/30"
+                ]);
             });
     }
 
