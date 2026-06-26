@@ -1,34 +1,24 @@
 <?php
 
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\OrderFulfillmentController;
+use App\Http\Controllers\ChargilyPayController;
+use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\ExtractorController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\LinkController;
 
 Route::get('/', function () {
     return view('welcome');
 })->name('welcome');
-
-/*
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
-*/
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
-
-//Route::post('/test', [LinkController::class, 'test'])->name('product.unlock');
-//Route::post('/test', [LinkController::class, 'handleSearch'])->name('product.unlock'); // OG
-//Route::post('/process-link', [LinkController::class, 'test']);
-
-/*
-Route::get('/test', function () {
-    return view('product-result');
-})->name('product.unlock');
-*/
 
 Route::get('/mock/products', function () {
     return response()->json([
@@ -51,30 +41,17 @@ Route::get('/mock/products', function () {
 
 require __DIR__.'/auth.php';
 
-use App\Http\Controllers\OrderController;
-
 Route::post('/orders', [OrderController::class, 'store'])
     ->middleware('auth')
     ->name('orders.store');
 
-Route::get('/orders/{order}/payment',
-    [OrderController::class, 'payment'])
+Route::get('/orders/{order}/payment', [OrderController::class, 'payment'])
     ->middleware('auth')
     ->name('orders.payment');
 
-use App\Http\Controllers\ChargilyPayController;
-
-Route::post('chargilypay/redirect', [ChargilyPayController::class, "redirect"])->name("chargilypay.redirect");
-Route::get('chargilypay/back', [ChargilyPayController::class, "back"])->name("chargilypay.back");
-Route::post('chargilypay/webhook', [ChargilyPayController::class, "webhook"])->name("chargilypay.webhook_endpoint");
-
-use App\Http\Controllers\ProductController;
-
-/*
-Route::get('/product/unlocked', [ProductController::class, 'showFirstProduct'])->name('product.unlock');
-*/
-
-use App\Http\Controllers\ExtractorController;
+Route::post('chargilypay/redirect', [ChargilyPayController::class, 'redirect'])->name('chargilypay.redirect');
+Route::get('chargilypay/back', [ChargilyPayController::class, 'back'])->name('chargilypay.back');
+Route::post('chargilypay/webhook', [ChargilyPayController::class, 'webhook'])->name('chargilypay.webhook_endpoint');
 
 Route::post('/fetch-product', [ExtractorController::class, 'fetch'])->name('fetch.product');
 
@@ -90,12 +67,8 @@ Route::get('/request/{id}/waiting', function ($id) {
     }
 
     return view('waiting', compact('request'));
-})->middleware('auth')
-    ->name('request.waiting');
+})->middleware('auth')->name('request.waiting');
 
-use App\Http\Controllers\Admin\DashboardController;
-
-// Admin middleware for security
 Route::middleware(['auth', 'is_admin'])->group(function () {
     Route::get('/admin', [DashboardController::class, 'index'])->name('admin.dashboard');
 
@@ -103,6 +76,10 @@ Route::middleware(['auth', 'is_admin'])->group(function () {
     Route::get('/admin/request/{id}', [ProductController::class, 'adminShow'])->name('admin.request.show');
     Route::post('/admin/request/{id}/update', [ProductController::class, 'adminUpdate'])->name('admin.request.update');
     Route::post('/admin/request/{id}/reject', [ProductController::class, 'adminReject'])->name('admin.request.reject');
+
+    Route::get('/admin/orders', [OrderFulfillmentController::class, 'index'])->name('admin.orders.index');
+    Route::get('/admin/orders/{order}', [OrderFulfillmentController::class, 'show'])->name('admin.orders.show');
+    Route::patch('/admin/orders/{order}/fulfillment', [OrderFulfillmentController::class, 'update'])->name('admin.orders.fulfillment.update');
 });
 
 Route::get('/request/{id}/status', function ($id) {
@@ -120,8 +97,7 @@ Route::get('/request/{id}/status', function ($id) {
             default => null,
         },
     ]);
-})->middleware('auth')
-    ->name('request.status');
+})->middleware('auth')->name('request.status');
 
 Route::get('/request/{id}/view', function ($id) {
     $product = \App\Models\Product::findOrFail($id);
@@ -135,8 +111,7 @@ Route::get('/request/{id}/view', function ($id) {
     }
 
     return view('request-view', compact('product'));
-})->middleware('auth')
-    ->name('request.view');
+})->middleware('auth')->name('request.view');
 
 Route::get('/request/{id}/rejected', function ($id) {
     $request = \App\Models\Product::findOrFail($id);
@@ -150,8 +125,7 @@ Route::get('/request/{id}/rejected', function ($id) {
     }
 
     return view('request-rejected', compact('request'));
-})->middleware('auth')
-    ->name('request.rejected');
+})->middleware('auth')->name('request.rejected');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [OrderController::class, 'index'])
@@ -162,27 +136,13 @@ Route::get('/orders/create', function () {
     return redirect()->route('welcome');
 })->name('orders.create');
 
-use App\Http\Controllers\CheckoutController;
-
-Route::post(
-    '/checkout/{order}',
-    [CheckoutController::class, 'process']
-)->middleware('auth')->name('checkout.process');
+Route::post('/checkout/{order}', [CheckoutController::class, 'process'])
+    ->middleware('auth')
+    ->name('checkout.process');
 
 Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel'])
     ->name('orders.cancel')
     ->middleware('auth');
-
-/*
-Route::get('/debug-env-check', function () {
-    return response()->json([
-        'cloudinary_file_exists' => file_exists(config_path('cloudinary.php')),
-        'config_cached'          => app()->configurationIsCached(),
-        'loaded_config_data'     => config('cloudinary'),
-        'cloudinary_url_env'     => env('CLOUDINARY_URL') ? 'Detected' : 'Missing',
-    ]);
-});
-*/
 
 Route::get('/debug-vendor-file', function () {
     $path = base_path('vendor/cloudinary-labs/cloudinary-laravel/src/CloudinaryServiceProvider.php');
@@ -194,7 +154,6 @@ Route::get('/debug-vendor-file', function () {
     $lines = file($path);
     $output = [];
 
-    // Grab lines 55 to 75 (0-indexed array means index 63 is line 64)
     for ($i = 54; $i <= 74; $i++) {
         if (isset($lines[$i])) {
             $output[$i + 1] = trim($lines[$i]);
