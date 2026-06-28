@@ -34,6 +34,12 @@
                     <span>Requests</span>
                 </a>
 
+                <a href="{{ route('admin.orders.index') }}"
+                   class="flex items-center justify-between rounded-lg px-4 py-3 text-sm font-semibold transition
+                   {{ request()->routeIs('admin.orders.*') ? 'bg-[#e9c38c] text-[#0b0f19]' : 'text-gray-300 hover:bg-[#171a21] hover:text-white' }}">
+                    <span>Orders</span>
+                </a>
+
                 <a href="{{ route('dashboard') }}"
                    class="flex items-center justify-between rounded-lg px-4 py-3 text-sm font-semibold text-gray-300 transition hover:bg-[#171a21] hover:text-white">
                     <span>User Dashboard</span>
