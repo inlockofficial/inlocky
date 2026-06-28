@@ -52,6 +52,20 @@
                 <li><a @click="mobileMenuOpen = false" href="#featured" class="block text-gray-400 hover:text-white">Our Vision</a></li>
                 <li><a @click="mobileMenuOpen = false" href="#faqs" class="block text-gray-400 hover:text-white">FAQs</a></li>
                 <li><a @click="mobileMenuOpen = false" href="#contact" class="block text-gray-400 hover:text-white">Contact</a></li>
+
+                {{-- Login / Register — hidden on desktop (hidden md:inline-flex above), exposed here for mobile --}}
+                <li class="pt-3 border-t border-[#242833]">
+                    <a href="{{ route('login') }}"
+                       class="block w-full text-center py-2.5 bg-[#e9c38c] text-black text-sm font-semibold rounded-full hover:bg-[#d6b07a] transition-colors">
+                        Login
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('register') }}"
+                       class="block text-center text-sm text-gray-400 hover:text-white transition-colors">
+                        Register
+                    </a>
+                </li>
             </ul>
         </div>
     </nav>
