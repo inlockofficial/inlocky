@@ -49,6 +49,10 @@ Route::get('/orders/{order}/payment', [OrderController::class, 'payment'])
     ->middleware('auth')
     ->name('orders.payment');
 
+Route::get('/orders/{order}/tracking', [OrderController::class, 'tracking'])
+    ->middleware('auth')
+    ->name('orders.tracking');
+
 Route::post('chargilypay/redirect', [ChargilyPayController::class, 'redirect'])->name('chargilypay.redirect');
 Route::get('chargilypay/back', [ChargilyPayController::class, 'back'])->name('chargilypay.back');
 Route::post('chargilypay/webhook', [ChargilyPayController::class, 'webhook'])->name('chargilypay.webhook_endpoint');
@@ -89,10 +93,20 @@ Route::get('/request/{id}/status', function ($id) {
         abort(403);
     }
 
+    $status = $request->status;
+
+    if (
+        $request->status === 'priced' &&
+        $request->quote_expires_at &&
+        $request->quote_expires_at->isPast()
+    ) {
+        $status = 'expired';
+    }
+
     return response()->json([
-        'status' => $request->status,
-        'redirect_url' => match ($request->status) {
-            'priced' => route('request.view', $request->id),
+        'status' => $status,
+        'redirect_url' => match ($status) {
+            'priced', 'expired' => route('request.view', $request->id),
             'rejected' => route('request.rejected', $request->id),
             default => null,
         },
