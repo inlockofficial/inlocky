@@ -3,95 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>INLOCK — Reviewing Product</title>
+    <title>INLOCK - Reviewing Product</title>
 
     @vite(['resources/css/app.css','resources/js/app.js'])
 </head>
 
-<body class="bg-[#0b0f19] text-white min-h-screen flex items-center justify-center">
+<body class="min-h-screen bg-[#0b0f19] px-4 py-6 text-white sm:flex sm:items-center sm:justify-center">
+    <main class="mx-auto w-full max-w-md">
+        <section class="rounded-2xl border border-[#242833] bg-[#171a21] p-5 shadow-xl sm:p-8">
+            <div class="text-center">
+                <p class="text-2xl font-black tracking-wide text-[#e9c38c]">INLOCK</p>
+                <h1 class="mt-3 text-xl font-bold text-white sm:text-2xl">
+                    We are reviewing your product
+                </h1>
+                <p id="status-copy" class="mt-3 text-sm leading-relaxed text-gray-400">
+                    Our team is checking availability and calculating your final local price.
+                </p>
+            </div>
 
-    <!-- Background glow -->
-    <div class="absolute inset-0 opacity-20 blur-3xl
-        bg-[radial-gradient(circle_at_center,#e9c38c_0%,transparent_60%)]">
-    </div>
+            <div class="mt-8 flex justify-center">
+                <div id="loader" class="relative h-16 w-16">
+                    <div class="absolute inset-0 rounded-full border-2 border-[#242833]"></div>
+                    <div class="absolute inset-0 animate-spin rounded-full border-2 border-[#e9c38c] border-t-transparent"></div>
+                </div>
+            </div>
 
-    <!-- CARD -->
-    <div class="
-        relative
-        bg-[#171a21]
-        border border-[#242833]
-        rounded-2xl
-        shadow-xl
-        p-10
-        max-w-lg
-        w-full
-        text-center
-    ">
+            <div class="mt-8">
+                <x-progress-bar id="progress-bar" :value="35" label="Request progress" />
+            </div>
 
-        <!-- Logo / Title -->
-        <h1 class="text-3xl font-bold mb-3 tracking-wide">
-            <span class="text-[#e9c38c]">INLOCK</span>
-        </h1>
+            <div class="mt-6 flex justify-center">
+                <x-status-badge id="status" :status="$request->status" />
+            </div>
 
-        <h2 class="text-xl font-semibold text-gray-200 mb-6">
-            We're checking your product 🔎
-        </h2>
-
-        <!-- Loader -->
-        <div class="flex justify-center mb-6">
-            <div class="relative w-14 h-14">
-
-                <div class="absolute inset-0 rounded-full
-                    border-2 border-[#242833]"></div>
-
-                <div class="absolute inset-0 rounded-full
-                    border-2 border-[#e9c38c]
-                    border-t-transparent
-                    animate-spin">
+            <div class="mt-8 grid gap-3">
+                <div id="step-review" class="rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-4">
+                    <p class="text-sm font-bold text-yellow-200">1. Review in progress</p>
+                    <p class="mt-1 text-xs leading-relaxed text-yellow-100/80">
+                        We are checking the product link, options, and availability.
+                    </p>
                 </div>
 
+                <div id="step-decision" class="rounded-lg border border-[#242833] bg-[#0f1115] p-4">
+                    <p class="text-sm font-bold text-gray-300">2. Pricing decision</p>
+                    <p class="mt-1 text-xs leading-relaxed text-gray-500">
+                        You will be redirected once the quote is ready or if the request cannot be approved.
+                    </p>
+                </div>
             </div>
-        </div>
 
-        <!-- Description -->
-        <p class="text-gray-400 mb-6 leading-relaxed">
-            Our team is reviewing your product and calculating the final price
-            including shipping and service fees.
-            <br>
-            <span class="text-gray-500 text-sm">
-                This usually takes 5–30 minutes.
-            </span>
-        </p>
-
-        <!-- STATUS BADGE -->
-        <div class="mb-6">
-            <span id="status"
-                class="px-4 py-2 rounded-full text-sm font-semibold
-                bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">
-                {{ ucfirst(str_replace('_', ' ', $request->status)) }}
-            </span>
-        </div>
-
-        <!-- Info box -->
-        <div id="status-message" class="
-            bg-[#0f1115]
-            border border-[#242833]
-            rounded-lg
-            p-4
-            text-sm text-gray-400
-        ">
-            ⏳ You will be redirected automatically once pricing is ready.
-        </div>
-
-    </div>
+            <x-alert type="info" class="mt-6">
+                You can safely leave this page and come back from your dashboard later.
+            </x-alert>
+        </section>
+    </main>
 
 <script>
     const requestId = {{ $request->id }};
-
-    function updateStatusBadge(statusEl, classes) {
-        statusEl.className = "px-4 py-2 rounded-full text-sm font-semibold border ";
-        statusEl.classList.add(...classes);
-    }
+    let poller = null;
 
     function formatStatus(status) {
         return status
@@ -99,55 +68,89 @@
             .replace(/\b\w/g, character => character.toUpperCase());
     }
 
+    function badgeClasses(status) {
+        const classes = {
+            pending_review: ['bg-yellow-500/10', 'text-yellow-300', 'border-yellow-500/30'],
+            priced: ['bg-green-500/10', 'text-green-300', 'border-green-500/30'],
+            rejected: ['bg-red-500/10', 'text-red-300', 'border-red-500/30'],
+            expired: ['bg-orange-500/10', 'text-orange-300', 'border-orange-500/30'],
+        };
+
+        return classes[status] || ['bg-gray-500/10', 'text-gray-300', 'border-gray-500/30'];
+    }
+
+    function setBadge(status) {
+        const statusEl = document.getElementById('status');
+        statusEl.className = 'inline-flex items-center rounded-full border px-3 py-1 text-xs font-bold ';
+        statusEl.classList.add(...badgeClasses(status));
+        statusEl.innerText = formatStatus(status);
+    }
+
+    function setProgress(percent) {
+        const bar = document.querySelector('#progress-bar div div');
+        const label = document.querySelector('#progress-bar div span:last-child');
+
+        if (bar) {
+            bar.style.width = `${percent}%`;
+        }
+
+        if (label) {
+            label.innerText = `${percent}%`;
+        }
+    }
+
+    function redirectAfter(url) {
+        window.clearInterval(poller);
+
+        setTimeout(() => {
+            window.location.href = url;
+        }, 900);
+    }
+
     function checkStatus() {
         fetch(`/request/${requestId}/status`)
-            .then(res => res.json())
+            .then(response => response.json())
             .then(data => {
-                const statusEl = document.getElementById('status');
-                const messageEl = document.getElementById('status-message');
+                const copy = document.getElementById('status-copy');
+                const decision = document.getElementById('step-decision');
 
-                statusEl.innerText = formatStatus(data.status);
+                setBadge(data.status);
+
+                if (data.status === 'pending_review') {
+                    setProgress(35);
+                    return;
+                }
 
                 if (data.status === 'priced') {
-                    updateStatusBadge(statusEl, [
-                        "bg-green-500/20",
-                        "text-green-400",
-                        "border-green-500/30"
-                    ]);
-
-                    setTimeout(() => {
-                        window.location.href = data.redirect_url || `/request/${requestId}/view`;
-                    }, 1200);
-
+                    setProgress(100);
+                    copy.innerText = 'Your quote is ready. Redirecting you to the product page.';
+                    decision.className = 'rounded-lg border border-green-500/30 bg-green-500/10 p-4';
+                    redirectAfter(data.redirect_url || `/request/${requestId}/view`);
                     return;
                 }
 
                 if (data.status === 'rejected') {
-                    updateStatusBadge(statusEl, [
-                        "bg-red-500/20",
-                        "text-red-400",
-                        "border-red-500/30"
-                    ]);
-
-                    messageEl.innerText = "Your request was reviewed. Redirecting to the decision details...";
-
-                    setTimeout(() => {
-                        window.location.href = data.redirect_url || `/request/${requestId}/rejected`;
-                    }, 1200);
-
+                    setProgress(100);
+                    copy.innerText = 'Your request has been reviewed. Redirecting you to the decision details.';
+                    decision.className = 'rounded-lg border border-red-500/30 bg-red-500/10 p-4';
+                    redirectAfter(data.redirect_url || `/request/${requestId}/rejected`);
                     return;
                 }
 
-                updateStatusBadge(statusEl, [
-                    "bg-yellow-500/20",
-                    "text-yellow-400",
-                    "border-yellow-500/30"
-                ]);
+                if (data.status === 'expired') {
+                    setProgress(100);
+                    copy.innerText = 'This quote has expired. Redirecting you to the quote details.';
+                    decision.className = 'rounded-lg border border-orange-500/30 bg-orange-500/10 p-4';
+                    redirectAfter(data.redirect_url || `/request/${requestId}/view`);
+                }
+            })
+            .catch(() => {
+                document.getElementById('status-copy').innerText = 'Connection issue. We will keep checking automatically.';
             });
     }
 
-    setInterval(checkStatus, 5000);
+    poller = window.setInterval(checkStatus, 5000);
+    checkStatus();
 </script>
-
 </body>
 </html>
