@@ -115,9 +115,7 @@
                 @empty
                     <x-empty-state
                         title="No orders yet"
-                        message="When you approve a quote and place an order, it will appear here."
-                        :action-href="route('welcome')"
-                        action-label="Start shopping" />
+                        message="When you approve a quote and place an order, it will appear here." />
                 @endforelse
             </div>
         </div>
