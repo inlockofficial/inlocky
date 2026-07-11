@@ -6,7 +6,15 @@
     </x-slot>
 
     <div class="px-4 py-6 sm:px-6 lg:px-8">
-        <div class="mx-auto max-w-7xl">
+        <div class="mx-auto max-w-7xl space-y-6">
+
+            <div class="rounded-2xl border border-[#242833] bg-[#171a21] p-4 shadow-xl sm:p-6">
+                @include('partials.request-form', [
+                    'heading' => 'Request a new price estimate',
+                    'description' => "Paste an AliExpress link and we'll get back to you with a DZD price.",
+                ])
+            </div>
+
             <div class="rounded-2xl border border-[#242833] bg-[#171a21] p-4 shadow-xl sm:p-6">
                 <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
@@ -14,9 +22,9 @@
                         <p class="mt-1 text-sm text-gray-500">Track payment, processing, and delivery progress.</p>
                     </div>
 
-                    <a href="{{ route('welcome') }}"
-                       class="flex min-h-11 items-center justify-center rounded-lg bg-[#e9c38c] px-4 py-2 text-sm font-black text-[#0b0f19] transition hover:bg-[#f1d5a7]">
-                        New request
+                    <a href="{{ route('requests.index') }}"
+                       class="flex min-h-11 items-center justify-center rounded-lg border border-[#242833] px-4 py-2 text-sm font-bold text-gray-300 transition hover:border-[#e9c38c] hover:text-[#e9c38c]">
+                        View my requests
                     </a>
                 </div>
 
