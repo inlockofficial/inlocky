@@ -27,18 +27,76 @@ class ProductController extends Controller
                 ->store('screenshots', 'public');
         }
 
-        $product = Product::create([
+        $requestData = [
             'ali_link' => $cleanUrl,
-            'user_id' => auth()->id(),
             'color' => $request->color,
             'size' => $request->size,
             'quantity' => $request->quantity,
             'gender' => $request->gender,
             'custom_note' => $request->custom_note,
             'screenshot' => $screenshotPath,
+        ];
+
+        // Guests can fill out the form, but we need an account to attach
+        // the request to. Preserve everything they entered (the screenshot
+        // is already safely on disk) and resume the submission right after
+        // they register or log in — see HandlesPendingProductRequest.
+        if (!auth()->check()) {
+            session(['pending_product_request' => $requestData]);
+
+            return redirect()
+                ->route('register')
+                ->with('status', "We've saved your request — create an account to get your DZD price.");
+        }
+
+        $product = Product::create($requestData + [
+            'user_id' => auth()->id(),
         ]);
 
         return redirect()->route('request.waiting', $product->id);
+    }
+
+    /**
+     * "My Requests" — every request the authenticated user has made,
+     * grouped by where it stands in the lifecycle.
+     */
+    public function myRequests()
+    {
+        $requests = Product::where('user_id', auth()->id())
+            ->with('order')
+            ->latest()
+            ->get();
+
+        $grouped = [
+            'converted' => $requests->filter(
+                fn (Product $product) => $product->order !== null
+            )->values(),
+
+            'priced' => $requests->filter(function (Product $product) {
+                return $product->order === null
+                    && $product->status === 'priced'
+                    && !($product->quote_expires_at && $product->quote_expires_at->isPast());
+            })->values(),
+
+            'pending' => $requests->filter(
+                fn (Product $product) => $product->order === null && $product->status === 'pending_review'
+            )->values(),
+
+            'expired' => $requests->filter(function (Product $product) {
+                return $product->order === null
+                    && $product->status === 'priced'
+                    && $product->quote_expires_at
+                    && $product->quote_expires_at->isPast();
+            })->values(),
+
+            'rejected' => $requests->filter(
+                fn (Product $product) => $product->order === null && $product->status === 'rejected'
+            )->values(),
+        ];
+
+        return view('requests.index', [
+            'grouped' => $grouped,
+        ]);
     }
 
     public function adminIndex(Request $request)
