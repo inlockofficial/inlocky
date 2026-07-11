@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Concerns\HandlesPendingProductRequest;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
@@ -14,6 +15,8 @@ use Illuminate\View\View;
 
 class RegisteredUserController extends Controller
 {
+    use HandlesPendingProductRequest;
+
     /**
      * Display the registration view.
      */
@@ -45,7 +48,9 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        return redirect(route('dashboard', absolute: false));
+        // If they arrived here from the request form as a guest, finish
+        // that submission now and take them to the waiting page.
+        return $this->redirectAfterAuthWithPendingRequest();
     }
 
 }
