@@ -4,6 +4,8 @@
         Create your INLOCK account
     </h2>
 
+    <x-auth-session-status class="mb-4 text-center text-green-400" :status="session('status')" />
+
     <form method="POST" action="{{ route('register') }}" class="space-y-5">
         @csrf
 
