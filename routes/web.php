@@ -59,9 +59,19 @@ Route::post('chargilypay/webhook', [ChargilyPayController::class, 'webhook'])->n
 
 Route::post('/fetch-product', [ExtractorController::class, 'fetch'])->name('fetch.product');
 
+// NOTE: no longer guarded by the "auth" middleware. Guests are allowed to
+// submit this form too — ProductController::store() detects whether the
+// visitor is authenticated and, if not, preserves the submission and sends
+// them to registration instead of hard-failing with a redirect-to-login
+// that would silently drop their POST data.
 Route::post('/request', [ProductController::class, 'store'])
-    ->middleware('auth')
     ->name('request.store');
+
+// "My Requests" — authenticated overview of all of the user's product
+// requests, grouped by status.
+Route::get('/requests', [ProductController::class, 'myRequests'])
+    ->middleware('auth')
+    ->name('requests.index');
 
 Route::get('/request/{id}/waiting', function ($id) {
     $request = \App\Models\Product::findOrFail($id);
