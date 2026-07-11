@@ -19,13 +19,25 @@
                     <a href="{{ route('dashboard') }}"
                        class="text-sm tracking-wide {{ request()->routeIs('dashboard') ? 'text-white' : 'text-gray-400' }}
                        hover:text-white transition">
-                        My Orders
+                        Dashboard
                     </a>
 
-                    <a href="{{ route('profile.edit') }}"
-                       class="text-sm tracking-wide {{ request()->routeIs('profile.edit') ? 'text-white' : 'text-gray-400' }}
+                    <a href="{{ route('requests.index') }}"
+                       class="text-sm tracking-wide {{ request()->routeIs('requests.index') || request()->routeIs('request.view') || request()->routeIs('request.waiting') || request()->routeIs('request.rejected') ? 'text-white' : 'text-gray-400' }}
                        hover:text-white transition">
-                        Profile
+                        My Requests
+                    </a>
+
+                    {{--
+                        "My Orders" currently reuses the dashboard route, since that
+                        view already renders the orders list. This will point at a
+                        dedicated route once the Dashboard becomes its own overview
+                        page in a later phase.
+                    --}}
+                    <a href="{{ route('dashboard') }}"
+                       class="text-sm tracking-wide {{ request()->routeIs('orders.payment') || request()->routeIs('orders.tracking') ? 'text-white' : 'text-gray-400' }}
+                       hover:text-white transition">
+                        My Orders
                     </a>
 
                 </div>
@@ -45,7 +57,7 @@
                     New Order
                 </a>
 
-                <!-- User Dropdown -->
+                <!-- Account Dropdown -->
                 <div class="relative" x-data="{ dropdown: false }">
 
                     <button @click="dropdown = !dropdown"
@@ -118,12 +130,17 @@
 
             <a href="{{ route('dashboard') }}"
                class="block text-gray-300 hover:text-white transition">
-                My Orders
+                Dashboard
             </a>
 
-            <a href="{{ route('profile.edit') }}"
+            <a href="{{ route('requests.index') }}"
                class="block text-gray-300 hover:text-white transition">
-                Profile
+                My Requests
+            </a>
+
+            <a href="{{ route('dashboard') }}"
+               class="block text-gray-300 hover:text-white transition">
+                My Orders
             </a>
 
             <a href="{{ route('orders.create') }}"
@@ -131,12 +148,19 @@
                 New Order
             </a>
 
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button class="text-gray-400 hover:text-white transition">
-                    Log Out
-                </button>
-            </form>
+            <div class="pt-3 border-t border-[#242833] space-y-3">
+                <a href="{{ route('profile.edit') }}"
+                   class="block text-gray-300 hover:text-white transition">
+                    Profile
+                </a>
+
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button class="text-gray-400 hover:text-white transition">
+                        Log Out
+                    </button>
+                </form>
+            </div>
 
         </div>
     </div>
