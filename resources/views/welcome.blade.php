@@ -36,9 +36,15 @@
                 </ul>
 
                 <div class="flex items-center gap-4">
-                    <a href="{{ route('login') }}" class="hidden md:inline-flex items-center px-5 py-2.5 bg-[#e9c38c] text-black text-sm font-semibold rounded-full hover:scale-105 hover:shadow-[0_0_20px_rgba(233,195,140,0.3)] transition-all duration-300">
-                        Login
-                    </a>
+                    @auth
+                        <a href="{{ route('dashboard') }}" class="hidden md:inline-flex items-center px-5 py-2.5 bg-[#e9c38c] text-black text-sm font-semibold rounded-full hover:scale-105 hover:shadow-[0_0_20px_rgba(233,195,140,0.3)] transition-all duration-300">
+                            Dashboard
+                        </a>
+                    @else
+                        <a href="{{ route('login') }}" class="hidden md:inline-flex items-center px-5 py-2.5 bg-[#e9c38c] text-black text-sm font-semibold rounded-full hover:scale-105 hover:shadow-[0_0_20px_rgba(233,195,140,0.3)] transition-all duration-300">
+                            Login
+                        </a>
+                    @endauth
                     <button @click="mobileMenuOpen = !mobileMenuOpen" class="md:hidden text-gray-300 hover:text-white">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
                     </button>
@@ -53,19 +59,27 @@
                 <li><a @click="mobileMenuOpen = false" href="#faqs" class="block text-gray-400 hover:text-white">FAQs</a></li>
                 <li><a @click="mobileMenuOpen = false" href="#contact" class="block text-gray-400 hover:text-white">Contact</a></li>
 
-                {{-- Login / Register — hidden on desktop (hidden md:inline-flex above), exposed here for mobile --}}
-                <li class="pt-3 border-t border-[#242833]">
-                    <a href="{{ route('login') }}"
-                       class="block w-full text-center py-2.5 bg-[#e9c38c] text-black text-sm font-semibold rounded-full hover:bg-[#d6b07a] transition-colors">
-                        Login
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ route('register') }}"
-                       class="block text-center text-sm text-gray-400 hover:text-white transition-colors">
-                        Register
-                    </a>
-                </li>
+                @auth
+                    <li class="pt-3 border-t border-[#242833]">
+                        <a href="{{ route('dashboard') }}"
+                           class="block w-full text-center py-2.5 bg-[#e9c38c] text-black text-sm font-semibold rounded-full hover:bg-[#d6b07a] transition-colors">
+                            Go to Dashboard
+                        </a>
+                    </li>
+                @else
+                    <li class="pt-3 border-t border-[#242833]">
+                        <a href="{{ route('login') }}"
+                           class="block w-full text-center py-2.5 bg-[#e9c38c] text-black text-sm font-semibold rounded-full hover:bg-[#d6b07a] transition-colors">
+                            Login
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('register') }}"
+                           class="block text-center text-sm text-gray-400 hover:text-white transition-colors">
+                            Register
+                        </a>
+                    </li>
+                @endauth
             </ul>
         </div>
     </nav>
@@ -108,82 +122,7 @@
                 <div class="bg-[#171a21] border border-[#242833] rounded-2xl p-8 shadow-2xl relative">
                     <div class="absolute -inset-1 bg-gradient-to-r from-[#e9c38c]/20 to-transparent blur-xl -z-10 rounded-2xl opacity-50"></div>
 
-                    <h3 class="text-xl font-medium mb-6 text-white">Request a Price Estimate</h3>
-
-                    @if ($errors->any())
-                        <div class="bg-red-500/10 border border-red-500/50 text-red-400 px-4 py-3 rounded-lg mb-6 text-sm">
-                            {{ $errors->first() }}
-                        </div>
-                    @endif
-
-                    <form action="{{ route('request.store') }}" method="POST" enctype="multipart/form-data" class="space-y-5">
-                        @csrf
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-300 mb-1.5">AliExpress Product Link <span class="text-[#e9c38c]">*</span></label>
-                            <input type="url" name="ali_link" placeholder="https://aliexpress.com/item/..." required
-                                class="w-full bg-[#0f1115] border border-[#242833] rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:border-[#e9c38c] focus:ring-1 focus:ring-[#e9c38c] transition-all outline-none">
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-300 mb-1.5">Color <span class="text-gray-500 text-xs font-normal">(Optional)</span></label>
-                                <select name="color" class="w-full bg-[#0f1115] border border-[#242833] rounded-xl px-4 py-3 text-white focus:border-[#e9c38c] focus:ring-1 focus:ring-[#e9c38c] transition-all outline-none appearance-none">
-                                    <option value="">Select color</option>
-                                    <option>Black</option>
-                                    <option>White</option>
-                                    <option>Blue</option>
-                                    <option>Red</option>
-                                    <option>Green</option>
-                                    <option>Pink</option>
-                                    <option>Other</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-300 mb-1.5">Size <span class="text-gray-500 text-xs font-normal">(Optional)</span></label>
-                                <select name="size" class="w-full bg-[#0f1115] border border-[#242833] rounded-xl px-4 py-3 text-white focus:border-[#e9c38c] focus:ring-1 focus:ring-[#e9c38c] transition-all outline-none appearance-none">
-                                    <option value="">Select size</option>
-                                    <option>XS</option><option>S</option><option>M</option>
-                                    <option>L</option><option>XL</option><option>XXL</option>
-                                    <option>Other</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-300 mb-1.5">Quantity <span class="text-[#e9c38c]">*</span></label>
-                                <input type="number" name="quantity" min="1" value="1" required
-                                    class="w-full bg-[#0f1115] border border-[#242833] rounded-xl px-4 py-3 text-white focus:border-[#e9c38c] focus:ring-1 focus:ring-[#e9c38c] transition-all outline-none">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-300 mb-1.5">Gender <span class="text-gray-500 text-xs font-normal">(Optional)</span></label>
-                                <select name="gender" class="w-full bg-[#0f1115] border border-[#242833] rounded-xl px-4 py-3 text-white focus:border-[#e9c38c] focus:ring-1 focus:ring-[#e9c38c] transition-all outline-none appearance-none">
-                                    <option value="">Not specified</option>
-                                    <option value="male">Men</option>
-                                    <option value="female">Women</option>
-                                    <option value="unisex">Unisex</option>
-                                    <option value="kids">Kids</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-300 mb-1.5">Add Screenshot <span class="text-gray-500 text-xs font-normal">(Optional)</span></label>
-                            <input type="file" name="screenshot" accept="image/*"
-                                class="w-full text-sm text-gray-400 file:mr-4 file:py-2.5 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#242833] file:text-white hover:file:bg-[#2a2f3a] transition-all">
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-300 mb-1.5">Extra Details</label>
-                            <textarea name="custom_note" rows="2" placeholder="Example: size XXL, dark blue color, cotton version..."
-                                class="w-full bg-[#0f1115] border border-[#242833] rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:border-[#e9c38c] focus:ring-1 focus:ring-[#e9c38c] transition-all outline-none resize-none"></textarea>
-                        </div>
-
-                        <button type="submit" class="w-full py-3.5 bg-[#e9c38c] text-black font-semibold rounded-xl hover:bg-[#d6b07a] transition-colors mt-2">
-                            Request DZD Price
-                        </button>
-                    </form>
+                    @include('partials.request-form')
                 </div>
             </div>
         </div>
